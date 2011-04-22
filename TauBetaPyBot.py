@@ -42,9 +42,31 @@ state = {}
 
 loggedin = False
 
+def enable_colors(c):
+    global COLOR_RED
+    global COLOR_GREEN
+    global COLOR_YELLOW
+    global COLOR_WHITE
+    global COLOR_NONE
+
+    if c:
+        COLOR_RED   ="\x1b[1;31m"
+        COLOR_GREEN ="\x1b[1;32m"
+        COLOR_YELLOW="\x1b[1;33m"
+        COLOR_WHITE ="\x1b[1;37m"
+        COLOR_NONE  ="\x1b[m"
+    else:
+        COLOR_RED   =""
+        COLOR_GREEN =""
+        COLOR_YELLOW=""
+        COLOR_WHITE =""
+        COLOR_NONE  =""
+
+def cprint(c, txt):
+    print "%s%s%s" % (c, txt, COLOR_NONE)
 
 def login():
-    print "Logging in..."
+    cprint(COLOR_GREEN, "logging in...")
     user = raw_input("Username: ")
     pw = getpass.getpass("Password: ")
     # user = "username"	# hardcode username and password for testing
@@ -64,25 +86,21 @@ def login():
 
 
 def explore():
-    print "  Exploring..."
+    cprint(COLOR_GREEN, "exploring...")
     query = {"action": "explore"}
     
     body = {"exploreS": "Explore"}
-    print "    Stage 1: %s \t %s" % (query, body)
     response, content = fetch_page(query, body)
-    wait_time = 8
-    print "    Sleeping for %d seconds..." % wait_time
-    time.sleep(wait_time)
+
+    time.sleep(8)
     
     body = {"finishexploreS": "What Did I Find?!"}
-    print "    Stage 2: %s \t %s" % (query, body)
-    print ""
     response, content = fetch_page(query, body)
     parse(content, query)
 
 
 def nap():
-    print "  Napping..."
+    cprint(COLOR_GREEN, "napping...")
     query = {
         "action": "bullpen",
         "req": "nap"
@@ -92,7 +110,7 @@ def nap():
 
 
 def fight():
-    print "  Fighting..."
+    cprint(COLOR_GREEN, "fighting...")
     query = {
         "baction": "fight"
     }
@@ -101,7 +119,7 @@ def fight():
 
 
 def flee():
-    print "  Fleeing..."
+    cprint(COLOR_GREEN, "fleeing...")
     query = {
         "baction": "flee"
     }
@@ -110,7 +128,7 @@ def flee():
 
 
 def donothing():
-    print "  Doing nothing..."
+    cprint(COLOR_GREEN, "doing nothing...")
     query = {
         "baction": "nothing"
     }
@@ -128,64 +146,82 @@ def fetch_page(query,body=None):
         url = "http://spider.eecs.umich.edu/~tbp/michelle/michelle.php"
     http = httplib2.Http()
     if body != None:
-        response, content = http.request(url, "POST", headers=headers,body=urllib.urlencode(body))
+        response, content = http.request(url, "POST", headers=headers,
+                                         body=urllib.urlencode(body))
     else:
         response, content = http.request(url, "GET", headers=headers)
     if "set-cookie" in response:
-        print "  Cookie: %s" % response["set-cookie"]
+        print "Cookie: %s" % response["set-cookie"]
     return response, content
 
     
 def parse(page,query,body=None):
     tree = lxml.html.document_fromstring(page)
     if body != None and "loginS" in body or query != None:
-        print "    Scraping game state..."
         for attribute in attributes:
             search = "".join(["//span[@id='",attribute,"']"])
-            player[attribute] = tree.xpath(search)[0].text_content().strip()
-        print_status()
+            player[attribute] = float(tree.xpath(search)[0].text_content().strip())
     if body != None and "finishexploreS" in body or query != None:
-        print "    Scraping notification..."
         notification = tree.xpath("//p[@class='notify']")
         # print notification
         if notification != []:
             state["event"] = notification[0].text_content().strip()
-            print "  Event: %s" % state["event"]
+
+    if "event" in state:
+        cprint(COLOR_YELLOW, state["event"])
+    print_status()
 
 
 def print_status():
-    level = " ".join(["Level:", player["level"]])
-    experience = " ".join(["Experience:", " / ".join([player["experience"], player["neededexperience"]])])
-    health = " ".join(["Health:", " / ".join([player["health"], player["maxhealth"]])])
-    integrity = " ".join(["Integrity:", " / ".join([player["integrity"], player["maxintegrity"]])])
-    gold = " ".join(["Gold:", player["gold"]])
-    print "      " + "  ".join([level, experience, health, integrity, gold])
+    _l    = player["level"]
+    _xp   = player["experience"]
+    _nxp  = player["neededexperience"]
+    _hp   = player["health"]
+    _mhp  = player["maxhealth"]
+    _int  = player["integrity"]
+    _mint = player["maxintegrity"]
+    _gold = player["gold"]
 
+    cprint(COLOR_NONE, "level %4d, xp %d / %d, health %d / %d (%d%%), integrity %d / %d, gold %d" %
+           (_l, _xp, _nxp, _hp, _mhp, int(100*_hp/_mhp), _int, _mint, _gold,))
 
 def main():
     wait_time = 0.5
     parser = optparse.OptionParser()
     parser.add_option('-n', action="store", dest="limit",
         help="number of iterations", default=1000)
+    parser.add_option('-c', action="store_true", dest="color",
+        help="enable ANSI color escape codes", default=False)
     options, args = parser.parse_args()
     limit = int(options.limit)
+    enable_colors(bool(options.color))
+
     print "Number of rounds: %d" % limit
     login()
     for n in xrange(limit):
-        print "\nROUND %d" % (n+1)
+        cprint(COLOR_WHITE,"\nROUND %d" % (n+1,))
         explore()
+
         if state["event"].find("assailed") > -1:
-            print "    Enemy detected."
-            while float(player["health"]) / float(player["maxhealth"]) >= 0.6 and state["event"].find("defeated") < 0 and state["event"].find("Rebecca") < 0:
-                percentage = float(player["health"]) / float(player["maxhealth"])
-                print "    Health: %.2f" % percentage
+            # FIXME: display the type of enemy and its health
+            cprint(COLOR_NONE, "            enemy %s%s%s health %d / %d" %
+                   (COLOR_WHITE, "x", COLOR_NONE, -1, -1))
+
+            while float(player["health"]) / float(player["maxhealth"]) >= 0.6 and \
+                  state["event"].find("defeated") < 0 and \
+                  state["event"].find("Rebecca") < 0:
+                percentage = player["health"] / player["maxhealth"]
+
                 donothing()
                 fight()
-                print "    Sleeping for %.2f seconds..." % wait_time
+
                 time.sleep(wait_time)
-            if float(player["health"]) / float(player["maxhealth"]) < 0.6 or state["event"].find("Rebecca") > -1:
+
+            if float(player["health"]) / float(player["maxhealth"]) < 0.6 or \
+               state["event"].find("Rebecca") > -1:
                 donothing()
                 flee()
+
         if float(player["health"]) / float(player["maxhealth"]) < 0.6:
             nap()
 
