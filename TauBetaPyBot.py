@@ -30,6 +30,11 @@ attributes = [
     "gold"
 ]
 
+eattributes = [
+    "enemycurrenthp",
+    "enemymaxhp"
+]
+
 headers = {
     "Content-Type": "application/x-www-form-urlencoded",
     "User-Agent": "TauBetaPyBot (Watson; JamesOS 1.0)",
@@ -37,6 +42,8 @@ headers = {
 }
 
 player = {}
+
+enemy = {}
 
 state = {}
 
@@ -69,7 +76,7 @@ def login():
     cprint(COLOR_GREEN, "logging in...")
     user = raw_input("Username: ")
     pw = getpass.getpass("Password: ")
-    # user = "username"	# hardcode username and password for testing
+    # user = "username" # hardcode username and password for testing
     # pw = "password"
     body = {
         "loginS": "Login",
@@ -166,6 +173,16 @@ def parse(page,query,body=None):
         # print notification
         if notification != []:
             state["event"] = notification[0].text_content().strip()
+    if query != None and "baction" in query:
+        for attribute in eattributes:
+            search = "".join(["//span[@id='",attribute,"']"])
+            enemy[attribute] = float(tree.xpath(search)[0].text_content().strip())
+        bnotifications = tree.xpath("//p[@class='fightnotify']")
+        enotifications = tree.xpath("//p[@class='enchantnotify']")
+        for bnotification in bnotifications:
+            print "  Battle event: %s" % bnotification.text_content().strip()
+        for enotification in enotifications:
+            print "  Magical event: %s" % enotification.text_content().strip()
 
     if "event" in state:
         cprint(COLOR_YELLOW, state["event"])
