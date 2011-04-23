@@ -220,10 +220,6 @@ def main():
         explore()
 
         if state["event"].find("assailed") > -1:
-            # FIXME: display the type of enemy and its health
-            cprint(COLOR_NONE, "            enemy %s%s%s health %d / %d" %
-                   (COLOR_WHITE, "x", COLOR_NONE, -1, -1))
-
             while float(player["health"]) / float(player["maxhealth"]) >= 0.6 and \
                   state["event"].find("defeated") < 0 and \
                   state["event"].find("Rebecca") < 0:
