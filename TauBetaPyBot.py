@@ -49,6 +49,8 @@ state = {}
 
 loggedin = False
 
+csvfile = None
+
 def enable_colors(c):
     global COLOR_RED
     global COLOR_GREEN
@@ -71,6 +73,26 @@ def enable_colors(c):
 
 def cprint(c, txt):
     print "%s%s%s" % (c, txt, COLOR_NONE)
+
+def csvhead():
+    global csvfile
+
+    if csvfile is None:
+        csvfile = file("stats-%d.csv" % int(time.time()), "w")
+
+    a = ["Date",]
+    a.extend(attributes)
+    a.extend(eattributes)
+    csvfile.write(",".join(a) + "\n")
+
+def csvstats():
+    a = [str(time.time()),]
+    for k in attributes:
+        a.append(str(player.get(k,"NA")))
+    for k in eattributes:
+        a.append(str(enemy.get(k,"NA")))
+    csvfile.write(",".join(a) + "\n")
+    csvfile.flush()
 
 def login():
     cprint(COLOR_GREEN, "logging in...")
@@ -201,6 +223,7 @@ def print_status():
 
     cprint(COLOR_NONE, "level %4d, xp %d / %d, health %d / %d (%d%%), integrity %d / %d, gold %d" %
            (_l, _xp, _nxp, _hp, _mhp, int(100*_hp/_mhp), _int, _mint, _gold,))
+    csvstats()
 
 def main():
     wait_time = 0.5
@@ -213,6 +236,7 @@ def main():
     limit = int(options.limit)
     enable_colors(bool(options.color))
 
+    csvhead()
     print "Number of rounds: %d" % limit
     login()
     for n in xrange(limit):
@@ -240,4 +264,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        cprint(COLOR_RED, "Bye, bye.")
