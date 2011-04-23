@@ -219,7 +219,7 @@ def main():
         cprint(COLOR_WHITE,"\nROUND %d" % (n+1,))
         explore()
 
-        if state["event"].find("assailed") > -1:
+        if "event" in state and state["event"].find("assailed") > -1:
             while float(player["health"]) / float(player["maxhealth"]) >= 0.6 and \
                   state["event"].find("defeated") < 0 and \
                   state["event"].find("Rebecca") < 0:
