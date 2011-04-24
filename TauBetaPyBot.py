@@ -198,7 +198,9 @@ def parse(page,query,body=None):
     if query != None and "baction" in query:
         for attribute in eattributes:
             search = "".join(["//span[@id='",attribute,"']"])
-            enemy[attribute] = float(tree.xpath(search)[0].text_content().strip())
+            results = tree.xpath(search)
+            if results != []:
+                enemy[attribute] = results[0].text_content().strip()
         bnotifications = tree.xpath("//p[@class='fightnotify']")
         enotifications = tree.xpath("//p[@class='enchantnotify']")
         for bnotification in bnotifications:
