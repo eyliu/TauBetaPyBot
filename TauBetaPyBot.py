@@ -246,7 +246,7 @@ def main():
         explore()
 
         if "event" in state and state["event"].find("assailed") > -1:
-            while float(player["health"]) / float(player["maxhealth"]) >= 0.6 and \
+            while float(player["health"]) / float(player["maxhealth"]) > 0.6 and \
                   state["event"].find("defeated") < 0 and \
                   state["event"].find("Rebecca") < 0:
                 percentage = player["health"] / player["maxhealth"]
@@ -256,12 +256,18 @@ def main():
 
                 time.sleep(wait_time)
 
-            if float(player["health"]) / float(player["maxhealth"]) < 0.6 or \
+            if float(player["health"]) / float(player["maxhealth"]) <= 0.6 or \
                state["event"].find("Rebecca") > -1:
                 donothing()
                 flee()
 
-        if float(player["health"]) / float(player["maxhealth"]) < 0.6:
+        if float(player["health"]) / float(player["maxhealth"]) <= 0.6:
+            nap()
+
+        if int(player["health"]) <= 0:
+            death_timeout = 125
+            cprint(COLOR_RED, "TauBetaPyBot has died! :-(  Sleeping for %d seconds..." % (death_timeout,))
+            time.sleep(death_timeout)
             nap()
 
 
