@@ -211,11 +211,19 @@ def parse(page,query,body=None):
             if results != []:
                 enemy[attribute] = results[0].text_content().strip()
         bnotifications = tree.xpath("//p[@class='fightnotify']")
-        enotifications = tree.xpath("//p[@class='enchantnotify']")
-        for bnotification in bnotifications:
-            print "  Battle event: %s" % bnotification.text_content().strip()
-        for enotification in enotifications:
-            print "  Magical event: %s" % enotification.text_content().strip()
+        mnotifications = tree.xpath("//p[@class='enchantnotify']")
+        bevents = []
+        mevents = []
+        for bnotify in bnotifications:
+            bevent = bnotify.text_content().strip()
+            print "  Battle event: %s" % bevent
+            bevents.append(bevent)
+        for mnotify in mnotifications:
+            mevent = mnotify.text_content().strip()
+            print "  Magical event: %s" % mevent
+            mevents.append(mevent)
+        state["bevents"] = bevents
+        state["mevents"] = mevents
 
     if "event" in state:
         cprint(COLOR_YELLOW, state["event"])
