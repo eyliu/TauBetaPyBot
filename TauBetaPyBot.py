@@ -156,6 +156,15 @@ def flee():
     parse(content,query)
 
 
+def withstand():
+    cprint(COLOR_GREEN, "casting withstand...")
+    query = {
+        "baction": "Withstand"
+    }
+    response, content = fetch_page(query)
+    parse(content,query)
+
+
 def donothing():
     cprint(COLOR_GREEN, "doing nothing...")
     query = {
@@ -246,18 +255,26 @@ def main():
         explore()
 
         if "event" in state and state["event"].find("assailed") > -1:
+            battle_round = 1
+            aim_round = -1
+            reload_round = -1
             while float(player["health"]) / float(player["maxhealth"]) > 0.6 and \
                   state["event"].find("defeated") < 0 and \
                   state["event"].find("Rebecca") < 0:
                 percentage = player["health"] / player["maxhealth"]
-
-                donothing()
-                fight()
+                
+                if battle_round == aim_round + 1:
+                    withstand()
+                else:
+                    donothing()
+                    fight()
 
                 time.sleep(wait_time)
+                battle_round += 1
 
             if float(player["health"]) / float(player["maxhealth"]) <= 0.6 or \
-               state["event"].find("Rebecca") > -1:
+               state["event"].find("Rebecca") > -1 or \
+               state["event"].find("Launcher") > -1:
                 donothing()
                 flee()
 
