@@ -268,8 +268,7 @@ def main():
             reload_round = -1
             while float(player["health"]) / float(player["maxhealth"]) > 0.6 and \
                   state["event"].find("defeated") < 0 and \
-                  state["event"].find("Rebecca") < 0 and \
-                  state["event"].find("Launcher") < 0:
+                  state["event"].find("Rebecca") < 0:
                 percentage = player["health"] / player["maxhealth"]
                 
                 if "bevents" in state:
@@ -278,7 +277,10 @@ def main():
                             aim_round = battle_round
                             cprint(COLOR_RED,"Danger, Will Robinson!  Rogue Nerf Bow and Arrow is taking aim!")
 
-                if battle_round == aim_round:
+                if state["event"].find("Launcher") > -1:
+                    withstand()
+                    break
+                elif battle_round == aim_round:
                     withstand()
                 else:
                     donothing()
